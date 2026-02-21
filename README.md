@@ -144,5 +144,9 @@ Para produção recomenda-se:
 
 Ian Gama  
 https://github.com/iangama
+<img width="1917" height="902" alt="image" src="https://github.com/user-attachments/assets/6626b831-1378-4395-9d10-899497025fff" />
+<img width="1918" height="917" alt="image" src="https://github.com/user-attachments/assets/71a36000-343c-4228-a560-ebfc67717b86" />
+<img width="1919" height="914" alt="image" src="https://github.com/user-attachments/assets/6ebd154f-f2f8-491b-8574-2c5484b05563" />
+<img width="1771" height="917" alt="image" src="https://github.com/user-attachments/assets/7b1ea4e8-9051-4c65-a32b-c0a6524d4ee4" />
 
 ---
