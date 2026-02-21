@@ -1,0 +1,20 @@
+entryPoints:
+  web:
+    address: ":8880"
+  websecure:
+    address: ":8443"
+  traefik:
+    address: ":8081"
+
+providers:
+  docker:
+    exposedByDefault: false
+
+api:
+  dashboard: true
+
+metrics:
+  prometheus: {}
+
+log:
+  level: INFO

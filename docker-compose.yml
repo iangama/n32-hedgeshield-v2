@@ -1,0 +1,93 @@
+name: n32-hedgeshield-v2
+
+networks:
+  n32_net:
+
+volumes:
+  pgdata:
+  grafana_data:
+  loki_data:
+
+services:
+
+  traefik:
+    image: traefik:v3.1
+    command:
+      - "--entrypoints.web.address=:8880"
+      - "--entrypoints.websecure.address=:8443"
+      - "--entrypoints.traefik.address=:8081"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--providers.docker.constraints=Label(`traefik.stack`,`n32-hedgeshield-v2`)"
+      - "--api.dashboard=true"
+    ports:
+      - "8880:8880"
+      - "8443:8443"
+      - "8081:8081"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - n32_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.stack=n32-hedgeshield-v2"
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hedgeshield
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - n32_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    networks:
+      - n32_net
+
+  api:
+    build: ./services/api
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/hedgeshield
+    networks:
+      - n32_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.stack=n32-hedgeshield-v2"
+      - "traefik.http.routers.api.rule=PathPrefix(`/api`)"
+      - "traefik.http.routers.api.entrypoints=web"
+      - "traefik.http.routers.api.priority=2000"
+      - "traefik.http.middlewares.api-strip.stripprefix.prefixes=/api"
+      - "traefik.http.routers.api.middlewares=api-strip"
+      - "traefik.http.services.api.loadbalancer.server.port=8000"
+
+  worker:
+    build: ./services/worker
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - n32_net
+
+  ui:
+    build: ./services/ui
+    networks:
+      - n32_net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.stack=n32-hedgeshield-v2"
+      - "traefik.http.routers.ui.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.ui.entrypoints=web"
+      - "traefik.http.services.ui.loadbalancer.server.port=5173"
